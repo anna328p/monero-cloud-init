@@ -1,0 +1,29 @@
+#cloud-config
+
+packages:
+- libhwloc5
+- libmicrohttpd10
+
+write_files:
+-   path: /etc/sysctl.d/25-hugepages.conf
+    content: |
+        vm.nr_hugepages = 128
+-   path: /etc/systemd/system/xmr-miner.service
+    content: |
+        [Unit]
+        Description=Monero mining service
+        [Service]
+        Type=simple
+        WorkingDirectory=/opt/xmr-generic/bin
+        ExecStart=/opt/xmr-generic/bin/xmr-stak
+        [Install]
+        WantedBy=network.target
+
+runcmd:
+- [sysctl, -w, "vm.nr_hugepages=128"]
+- [mkdir, -p, /opt/xmr-generic]
+- [wget, "http://u.dk0.us/xmr-generic.tar.gz", -O, /tmp/xmr-generic.tar.gz]
+- [tar, -xf, /tmp/xmr-generic.tar.gz, -C, /opt/xmr-generic]
+- [systemctl, daemon-reload]
+- [systemctl, enable, xmr-miner.service]
+- [systemctl, start, xmr-miner.service]
